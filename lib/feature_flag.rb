@@ -5,7 +5,6 @@ require "flipper"
 module FeatureFlag
   class Error < StandardError; end
   class << self
-    attr_accessor :adapter
     attr_accessor :prefix
 
     def memory_adapter
@@ -20,10 +19,11 @@ module FeatureFlag
       Flipper
     end
 
-    def configure
+    def configure(adapter, key_prefix)
+      FeatureFlag.prefix = key_prefix
       Flipper.configure do |config|
         config.default do
-          Flipper.new(FeatureFlag.adapter)
+          Flipper.new(adapter)
         end
       end
     end
@@ -51,16 +51,12 @@ module FeatureFlag
     end
 
     def enabled_feature_keys
-      features.select(&:enabled?).map { |f| f.name.gsub(prefix.to_s, '') }
+      features.select(&:enabled?).map { |f| f.name.gsub(FeatureFlag.prefix.to_s, '') }
     end
 
     def full_key(key)
       raise ArgumentError, "Feature flag key can not be blank" if key.blank?
-      [prefix, key].join
-    end
-
-    def prefix
-      FeatureFlag.prefix
+      [FeatureFlag.prefix, key].join
     end
   end
 end
