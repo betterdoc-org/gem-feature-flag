@@ -27,7 +27,7 @@ On application start:
     prefix = ENV.fetch('FEATURE_FLAGS_PREFIX")
 
     # init setup
-    FeatureFlag.configure(adapter, prefix)
+    FeatureFlag.configure(adapter: adapter, prefix: prefix)
 
 Use in your application:
 
@@ -38,3 +38,9 @@ Use in your application:
     FeatureFlag.enabled?('some-feature')
 
     FeatureFlag.disabled?('some-feature')
+
+Development
+
+    bundle install
+
+    rake spec

@@ -19,8 +19,10 @@ module FeatureFlag
       Flipper
     end
 
-    def configure(adapter, key_prefix)
-      FeatureFlag.prefix = key_prefix
+    def configure(adapter: nil, prefix: nil)
+      raise ArgumentError, 'adapter must be set' if adapter.nil?
+      raise ArgumentError, "prefix can't be blank" if blank?(prefix)
+      FeatureFlag.prefix = prefix
       Flipper.configure do |config|
         config.default do
           Flipper.new(adapter)
@@ -55,8 +57,12 @@ module FeatureFlag
     end
 
     def full_key(key)
-      raise ArgumentError, "Feature flag key can not be blank" if key.blank?
+      raise ArgumentError, "Feature flag key can not be blank" if blank?(key)
       [FeatureFlag.prefix, key].join
+    end
+
+    def blank?(test_string)
+      test_string.nil? || test_string.empty? || test_string.gsub(' ', '').empty?
     end
   end
 end
