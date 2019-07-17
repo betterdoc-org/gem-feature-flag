@@ -1,31 +1,26 @@
-require "feature_flag/version"
-require "flipper/adapters/redis"
 require "flipper"
+require "feature_flag/version"
+require "feature_flag/adapters/memory"
+require "feature_flag/adapters/redis"
+require "feature_flag/config"
 
 module FeatureFlag
   class Error < StandardError; end
   class << self
     attr_accessor :prefix
 
-    def memory_adapter
-      Flipper::Adapters::Memory.new
-    end
-
-    def redis_adapter(client)
-      Flipper::Adapters::Redis.new(client)
-    end
-
     def flipper
       Flipper
     end
 
-    def configure(adapter: nil, prefix: nil)
-      raise ArgumentError, 'adapter must be set' if adapter.nil?
+    def configure(options = {})
+      prefix = options[:prefix].to_s
+      raise ArgumentError, "adapter must be set" unless options.key?(:adapter)
       raise ArgumentError, "prefix can't be blank" if blank?(prefix)
       FeatureFlag.prefix = prefix
       Flipper.configure do |config|
         config.default do
-          Flipper.new(adapter)
+          Flipper.new(build_adapter(options))
         end
       end
     end
@@ -54,6 +49,21 @@ module FeatureFlag
 
     def enabled_feature_keys
       features.select(&:enabled?).map { |f| f.name.gsub(FeatureFlag.prefix.to_s, '') }
+    end
+
+    def config
+      @config ||= Config.new
+    end
+
+    private
+
+    def build_adapter(options = {})
+      name = options.delete(:adapter)
+      if name == :memory
+        FeatureFlag::Adapters::Memory.new(options)
+      elsif name == :redis
+        FeatureFlag::Adapters::Redis.new(options)
+      end
     end
 
     def full_key(key)

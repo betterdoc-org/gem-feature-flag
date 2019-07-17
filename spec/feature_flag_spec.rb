@@ -1,6 +1,6 @@
 RSpec.describe FeatureFlag do
   before(:each) do
-    FeatureFlag.configure(adapter: FeatureFlag.memory_adapter, prefix: 'some-prefix-')
+    FeatureFlag.configure(adapter: :memory, prefix: 'some-prefix-')
   end
 
   it "has a version number" do
@@ -51,8 +51,14 @@ RSpec.describe FeatureFlag do
 
   it "raise error if prefix or adapter are not valid" do
     [nil, "     ", ""].each do |prefix|
-      expect { FeatureFlag.configure(adapter: FeatureFlag.memory_adapter, prefix: prefix) }.to raise_error ArgumentError
+      expect { FeatureFlag.configure(adapter: :memory, prefix: prefix) }.to raise_error ArgumentError
     end
     expect { FeatureFlag.configure(prefix: 'some-prefix-') }.to raise_error ArgumentError
+  end
+
+  describe "#config" do
+    it "is an instance of FeatureFlag::Config class" do
+      expect(FeatureFlag.config.class).to eq(FeatureFlag::Config)
+    end
   end
 end
